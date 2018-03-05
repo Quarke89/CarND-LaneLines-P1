@@ -20,6 +20,8 @@ The following is a top level description of the pipeline used to detect the lane
 
 ## Pipeline Details
 
+![Input Image]('./images/input_image.jpg')
+
 **Color threshold mask**
 
 ---
