@@ -21,20 +21,28 @@ The following is a top level description of the pipeline used to detect the lane
 ## Pipeline Details
 
 **Color threshold mask**
+
 ---
 **Grayscale conversion**
+
 ---
 **Gaussian blur filter**
+
 ---
 **Canny edge detection**
+
 ---
 **Region masking**
+
 ---
 **Hough line transform**
+
 ---
 **Line filtering**
+
 ---
 **Combine with weighting**
+
 ---
 
 ## Potential Issues
