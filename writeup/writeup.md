@@ -24,26 +24,49 @@ The following is a top level description of the pipeline used to detect the lane
 
 **Color threshold mask**
 
+![color threshold low](images/color_threshold_low.jpg)
+![color threshold high](images/color_threshold_high.jpg)
+
 ---
 **Grayscale conversion**
+
+![grayscale image](images/gray_img.jpg)
 
 ---
 **Gaussian blur filter**
 
+![blur image](images/blur_img.jpg)
+
 ---
 **Canny edge detection**
+
+![canny edge detection](images/edge_img.jpg)
 
 ---
 **Region masking**
 
+![region of interest](images/region_of_interest.jpg)
+![masked image](images/masked_img.jpg)
+
+---
+**Color threshold mask application**
+
+![color threshold application](images/masked_filt_img.jpg)
+
 ---
 **Hough line transform**
+
+![hough line transform](images/hough_line.jpg)
 
 ---
 **Line filtering**
 
+![filterd lines](images/line_img.jpg)
+
 ---
 **Combine with weighting**
+
+![combined image](images/combined_img.jpg)
 
 ---
 
