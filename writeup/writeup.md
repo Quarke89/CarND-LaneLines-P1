@@ -17,7 +17,7 @@ The following is a top level description of the pipeline used to detect the lane
 * Color threshold mask application
 * Hough line transform
 * Line filtering
-* Combine with weighting 
+* Combining with weighting 
 
 ## Pipeline Details
 
@@ -54,7 +54,7 @@ The OpenCV function `cv2.GaussianBlur` is used with a kernel size of `3`
 ---
 **Canny edge detection**
 
-The next step of the pipeline uses the Canny edge detection algorithm to detect and draw the edges in the image. The threshold values of `50` and `150` are used for the min and max values needed for the hysteresis thresholding within the algorithm
+The next step of the pipeline uses the Canny edge detection algorithm to detect and draw the pixels associated with edges in the image. The threshold values of `50` and `150` are used for the min and max values needed for the hysteresis thresholding within the algorithm
 
 ![canny edge detection](images/edge_img.jpg)
 
@@ -76,17 +76,50 @@ The mask that was obtained from the color threshold operation earlier is now app
 ---
 **Hough line transform**
 
+After finding all the pixels associated with edges in the region of interest, the next step is to compute which set of pixels belong to the same line. 
+
+The Hough transform accomplishes this by finding all the points that are co-linear. Every edge pixel is transformed into the Hough space parametrized by ρ and θ using ρ = x\*cos(θ) + y\*sin(θ) where ρ is the distance to the origin and θ is the angle between the x-axis and the line connecting the origin and the pixel point. 
+
+θ is swept from 0 to 2π in some discrete step. This is equivalent to drawing a line through an edge pixel that goes through every angle 0 to 2π and tabulating/accumulating the ρ and θ values. When done for all the edge pixels, the ρ and θ pairs with the highest accumulated "votes" represent lines in the original image
+
+The OpenCV function `cv2.HoughLinesP` is used with the following parameters
+* ρ = 1 (distance resolution in pixels of the Hough grid)
+* 0 = π/180 (angular resolution in radians of the Hough grid)
+* threshold = 35 (minimum number of votes required)
+* min_line_len = 4 (minimum number of pixels required for making up a line)
+* max_line_gap = 10 (maximum gap in pixels between line segments)
+
+
 ![hough line transform](images/hough_line.jpg)
 
 ---
 **Line filtering**
 
+The output image from the Hough transform will have multiple line segments that were detected. This step of the pipeline implemented in the `draw_lines` routine will use these segments to compute 2 line segments, one for the left lane and one for the right lane.
+
+For each line segment, the slope, y-intercept, and the length is computed. Each segment is then sorted as either the left lane or the right lane based on the slope. Any segments that have a very steep or flat slope are ignored. The images show the result of this sorting
+
+<img src="images/ll_slope.jpg" alt="ll_slope" width="270" height="180"><img src="images/ll_int.jpg" alt="ll_int" width="270" height="180"><img src="images/ll_len.jpg" alt="ll_len" width="270" height="180">
+
+<img src="images/rl_slope.jpg" alt="rl_slope" width="270" height="180"><img src="images/rl_int.jpg" alt="rl_int" width="270" height="180"><img src="images/rl_len.jpg" alt="rl_len" width="270" height="180">
+
+There can still be some outlier line segments so another filtering step is performed. The weighted means of the slopes and intercept is computed using the length of the segment squared for the weighting. The weighted means are then used to define a range for keeping the line segments (see image titles above)
+
+The mean of the final filtered list for the left and right lane segments is then used to compute the slope and intercept of the left and right lane
+The two end points (x1,y1) and (x2,y2) for each line are:
+* y1: bottom of the image, x1: determined from equation of the line
+* x2: point furthest to the right or left depending on the lane, y2: determined from equation of the line
+
+The end points are also adjusted to avoid the 2 lane crossing each other
+
+The two final line segments representing the left and right lane are shown below
+
 ![filterd lines](images/line_img.jpg)
 
 ---
-**Combine with weighting**
+**Combining with weighting**
 
-The final output of the pipeline is a weighted combination of the input image and the image containing the detected left and right lane. The image is computed using `α*initial_img + β*line_img + γ`. The OpenCV function `cv2.addWeighted` is used with the parameters `α=0.8, β=1, γ=0`
+The final output of the pipeline is a weighted combination of the input image and the image containing the detected left and right lane line segments. The image is computed using `α*initial_img + β*line_img + γ`. The OpenCV function `cv2.addWeighted` is used with the parameters `α=0.8, β=1, γ=0`
 
 ![combined image](images/combined_img.jpg)
 
@@ -108,4 +141,10 @@ The final output of the pipeline is a weighted combination of the input image an
 
 ## Potential Issues
 
+* Very sensitive to the lighting conditions. This can affect the color thresholding as well as the edge detction to find the lanes
+* Does not detect curved lanes as we are only checking for co-linear points in the Hough transform
+
 ## Possible Improvements
+
+* Fitting higher order polynomials through regression to better fit curved lines
+* Parametrize the movement of the lane lines between frames in a video so that it can be smoothed 
